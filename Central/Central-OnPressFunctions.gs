@@ -4,11 +4,12 @@
  * Enters pay period total in cover summary.
  * Emails summary of timesheet
  *
+ * @param {ss} the active spreadsheet
+ * @param {sheet} the active sheet
  * @return none
  * @customfunction
  */
 function approveTimesheet(ss, sheet) {
-  // const ss = SpreadsheetApp.getActiveSpreadsheet()
 
   //check timesheet is accurate
   _checkTimesheet(ss,sheet)
@@ -27,11 +28,11 @@ function approveTimesheet(ss, sheet) {
   //email timesheet
   const name = ss.getSheetByName('Cover').getRange('B2').getValue()
   const emailAddress = ss.getSheetByName('Cover').getRange('B3').getValue()
+  
   // const approverEmailAddresses = 'sara@bax.org, ashley@bax.org'
   const approverEmailAddress = ss.getRangeByName('ApproverEmail').getValue()
   const subject = `BAX Timesheet: ${name} submitted for ${payPeriod}`
-  const filteredSummary = ss.getRangeByName('TimesheetSummary').getValues().filter(row => row[2])
-        //row has hours data
+  const filteredSummary = ss.getRangeByName('TimesheetSummary').getValues().filter(row => row[2]) //row has hours data
   const body = _createEmailBody(filteredSummary)
 
   MailApp.sendEmail({
@@ -72,15 +73,19 @@ function _createEmailBody(summaryArray) {
  * Checks if rate or time/session is missing
  * Sends alert
  *
+ * @param {ss} the active spreadsheet
+ * @param {sheet} the active sheet
  * @return none
  * @customfunction
  */
-function _checkTimesheet(ss,sheet){
+function _checkTimesheet(ss, sheet){
   const timesheetHoursTotal = ss.getRangeByName('TimesheetHoursTotal').getValues()
   
   for(i = 0; i < timesheetHoursTotal.length; i++){
     const row = timesheetHoursTotal[i]
-    if((row[0] > 0 && row[1] <=0) || (row[1] > 0 && row[0] <=0)){
+    
+    //identify where hours exists without total and vice versa
+    if((row[0] > 0 && row[1] <=0) || (row[1] > 0 && row[0] <=0)){ //row has hours and total data
       const ui = SpreadsheetApp.getUi()
       const issueRow = i + 1
       const rateCell = sheet.getRange(rateColNum,issueRow)
